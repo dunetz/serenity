@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from serenity.analytics import SnapshotId, Mode
+from serenity.analytics.api import SnapshotId, Mode
 
 
 def test_snapshot_id():

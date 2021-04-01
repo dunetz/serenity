@@ -1,0 +1,23 @@
+api-version: v1Beta
+environment:
+  - key: EXCHANGE_ID
+    value: autofill
+  - key: EXCHANGE_INSTANCE
+    value: prod
+  - key: EXCHANGE_ACCOUNT
+    value: 2106230001
+  - key: INSTRUMENTS_TO_CACHE
+    value: Phemex/BTCUSD
+strategy:
+  name: Peg
+  module: peg
+  strategy-class: Peg
+  environment:
+    - key: PEG_INSTRUMENT
+      value: PHEMEX:BTCUSD
+    - key: PEG_TYPE
+      value: Near
+    - key: PEG_SIDE
+      value: Buy
+    - key: PEG_QTY
+      value: 1

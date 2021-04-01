@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: daskd-scheduler
+  labels:
+    app: daskd
+    role: scheduler
+spec:
+  ports:
+  - port: 8786
+    nodePort: 30786
+    name: scheduler
+  - port: 8787
+    nodePort: 30787
+    name: bokeh
+  - port: 9786
+    nodePort: 31786
+    name: http
+  selector:
+    app: daskd
+    role: scheduler
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: daskd-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: daskd
+      role: scheduler
+  template:
+    metadata:
+      labels:
+        app: daskd
+        role: scheduler
+    spec:
+      containers:
+      - name: scheduler
+        image: cloudwallcapital/serenity:2020.12.09-b60
+        imagePullPolicy: Always
+        command: ["/app/venv-py3/bin/dask-scheduler"]
+        resources:
+          requests:
+            cpu: 1
+            memory: 10G
+        ports:
+        - containerPort: 8786
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: daskd-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: daskd
+      role: worker
+  template:
+    metadata:
+      labels:
+        app: daskd
+        role: worker
+    spec:
+      containers:
+      - name: worker
+        image: cloudwallcapital/serenity:2020.12.09-b60
+        imagePullPolicy: Always
+        command: [ 
+          "/bin/bash",
+          "-cx",
+          "/app/venv-py3/bin/dask-worker $DASKD_SCHEDULER_SERVICE_HOST:$DASKD_SCHEDULER_SERVICE_PORT_SCHEDULER --nthreads 1 --memory-limit 0"
+        ]
+        env:
+          - name: POSTGRES_SERENITY_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: serenity-password
+          - name: POSTGRES_SHARADAR_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database-secret-config
+                key: sharadar-password
+          - name: AZURE_CONNECT_STR
+            valueFrom:
+              secretKeyRef:
+                name: azure-secret-config
+                key: connect-str
+        resources:
+          requests:
+            cpu: 1
+            memory: 24G

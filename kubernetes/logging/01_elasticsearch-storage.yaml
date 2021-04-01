@@ -1,0 +1,31 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: elasticsearch-pv-volume
+  namespace: kube-system
+  labels:
+    type: local
+    app: elasticsearch
+spec:
+  storageClassName: elasticsearch-rw-sc
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/raid/data/elasticsearch"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: elasticsearch-pv-claim
+  namespace: kube-system
+  labels:
+    app: elasticsearch
+spec:
+  storageClassName: elasticsearch-rw-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi

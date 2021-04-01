@@ -1,65 +1,19 @@
 import asyncio
-import base64
-import hashlib
-import hmac
 import json
 import logging
 import socket
-import time
-
-from math import trunc
-from typing import Any
 
 import websockets
-from phemex import PhemexConnection, AuthCredentials, AuthenticationError, CredentialError, PhemexError
+from phemex import AuthCredentials
 from tau.core import Signal, NetworkScheduler, MutableSignal, Event
 from tau.signal import Map, Filter
 
-from serenity.db import InstrumentCache
-from serenity.position import ExchangePositionService, ExchangePosition
-from serenity.trading import OrderPlacer, Order, OrderFactory, MarketOrder, LimitOrder, TimeInForce, ExecInst, \
-    StopOrder, OrderManagerService
-
-
-def get_phemex_connection(credentials: AuthCredentials, instance_id: str = 'prod') -> Any:
-    if instance_id == 'prod':
-        ws_uri = 'wss://phemex.com/ws'
-        return PhemexConnection(credentials), ws_uri
-    elif instance_id == 'test':
-        ws_uri = 'wss://testnet.phemex.com/ws'
-        return PhemexConnection(credentials, api_url='https://testnet-api.phemex.com'), ws_uri
-    else:
-        raise ValueError(f'Unknown instance_id: {instance_id}')
-
-
-class WebsocketAuthenticator:
-    """
-    Authentication mechanism for Phemex private WS API.
-    """
-
-    def __init__(self, credentials: AuthCredentials):
-        self.api_key = credentials.api_key
-        self.secret_key = credentials.secret_key
-
-    def get_user_auth_message(self, auth_id: int = 1) -> str:
-        expiry = trunc(time.time()) + 60
-        token = self.api_key + str(expiry)
-        token = token.encode('utf-8')
-        hmac_key = base64.urlsafe_b64decode(self.secret_key)
-        signature = hmac.new(hmac_key, token, hashlib.sha256)
-        signature_b64 = signature.hexdigest()
-
-        user_auth = {
-            "method": "user.auth",
-            "params": [
-                "API",
-                self.api_key,
-                signature_b64,
-                expiry
-            ],
-            "id": auth_id
-        }
-        return json.dumps(user_auth)
+from serenity.db.api import InstrumentCache
+from serenity.exchange.phemex import get_phemex_connection, PhemexWebsocketAuthenticator
+from serenity.position.api import ExchangePositionService, ExchangePosition
+from serenity.trading.api import OrderPlacer, Order, OrderFactory, MarketOrder, LimitOrder, TimeInForce, ExecInst, \
+    StopOrder
+from serenity.trading.oms import OrderManagerService
 
 
 # noinspection DuplicatedCode
@@ -68,7 +22,7 @@ class OrderEventSubscriber:
 
     def __init__(self, credentials: AuthCredentials, scheduler: NetworkScheduler, oms: OrderManagerService,
                  instance_id: str = 'prod'):
-        self.auth = WebsocketAuthenticator(credentials)
+        self.auth = PhemexWebsocketAuthenticator(credentials)
         self.scheduler = scheduler
         self.oms = oms
 
@@ -102,21 +56,30 @@ class OrderEventSubscriber:
                     orders = msg['orders']
                     for order_msg in orders:
                         order_id = order_msg['orderID']
+                        cl_ord_id = order_msg['clOrdID']
                         exec_id = order_msg['execID']
                         last_px = order_msg['execPriceEp'] / 10000
                         last_qty = order_msg['execQty']
 
-                        order = self.sub.oms.get_order_by_order_id(order_id)
+                        order = self.sub.oms.get_order_by_cl_ord_id(cl_ord_id)
                         if order is None:
-                            self.sub.logger.warning(f'Ignored unknown orderID={order_id}')
-                            continue
+                            if cl_ord_id is None or cl_ord_id == '':
+                                self.sub.logger.warning(f'Received message from exchange with missing clOrdID, '
+                                                        f'orderID={order_id}')
+                            else:
+                                self.sub.logger.warning(f'Received message from exchange for unknown '
+                                                        f'clOrdID={cl_ord_id}, orderID={order_id}')
+                            return False
+                        elif order.get_order_id() is None:
+                            self.sub.logger.info(f'OMS order missing orderID; patching from clOrdID={cl_ord_id}')
+                            order.set_order_id(order_id)
 
                         if order_msg['ordStatus'] == 'New':
                             self.sub.oms.new(order, exec_id)
                         elif order_msg['ordStatus'] == 'Canceled':
                             self.sub.oms.apply_cancel(order, exec_id)
                         elif order_msg['ordStatus'] == 'PartiallyFilled' or order_msg['ordStatus'] == 'Filled':
-                            self.sub.oms.apply_fill(order, last_px, last_qty, exec_id)
+                            self.sub.oms.apply_fill(order, last_qty, last_px, exec_id)
 
                     return True
                 else:
@@ -129,7 +92,7 @@ class OrderEventSubscriber:
             while True:
                 try:
                     async with websockets.connect(self.ws_uri) as sock:
-                        self.logger.info(f'sending Account-Order-Position subscription request for orders')
+                        self.logger.info('sending Account-Order-Position subscription request for orders')
                         auth_msg = self.auth.get_user_auth_message(1)
                         await sock.send(auth_msg)
                         error_msg = await sock.recv()
@@ -154,18 +117,18 @@ class OrderEventSubscriber:
                                 # exit inner loop
                                 break
 
-                except socket.gaierror:
+                except socket.gaierror as error:
                     self.logger.error(
                         f'failed with socket error; attempting to reconnect after {self.timeout} '
                         f'seconds: {error}')
                     await asyncio.sleep(self.timeout)
                     continue
-                except ConnectionRefusedError:
+                except ConnectionRefusedError as error:
                     self.logger.error(f'connection refused; attempting to reconnect after {self.timeout} '
                                       f'seconds: {error}')
                     await asyncio.sleep(self.timeout)
                     continue
-                except BaseException:
+                except BaseException as error:
                     self.logger.error(
                         f'unknown connection error; attempting to reconnect after {self.timeout} '
                         f'seconds: {error}')
@@ -182,7 +145,7 @@ class PhemexExchangePositionService(ExchangePositionService):
     def __init__(self, credentials: AuthCredentials, scheduler: NetworkScheduler, instrument_cache: InstrumentCache,
                  account: str, instance_id: str = 'prod'):
         super().__init__(scheduler)
-        self.auth = WebsocketAuthenticator(credentials)
+        self.auth = PhemexWebsocketAuthenticator(credentials)
         self.scheduler = scheduler
         self.instrument_cache = instrument_cache
         self.account = account
@@ -229,7 +192,7 @@ class PhemexExchangePositionService(ExchangePositionService):
             while True:
                 try:
                     async with websockets.connect(self.ws_uri) as sock:
-                        self.logger.info(f'sending Account-Order-Position subscription request for positions')
+                        self.logger.info('sending Account-Order-Position subscription request for positions')
                         auth_msg = self.auth.get_user_auth_message(2)
                         await sock.send(auth_msg)
                         error_msg = await sock.recv()
@@ -254,17 +217,17 @@ class PhemexExchangePositionService(ExchangePositionService):
                                 # exit inner loop
                                 break
 
-                except socket.gaierror:
+                except socket.gaierror as error:
                     self.logger.error(f'failed with socket error; attempting to reconnect after {self.timeout} '
                                       f'seconds: {error}')
                     await asyncio.sleep(self.timeout)
                     continue
-                except ConnectionRefusedError:
+                except ConnectionRefusedError as error:
                     self.logger.error(f'connection refused; attempting to reconnect after {self.timeout} '
                                       f'seconds: {error}')
                     await asyncio.sleep(self.timeout)
                     continue
-                except BaseException:
+                except BaseException as error:
                     self.logger.error(f'unknown connection error; attempting to reconnect after {self.timeout} '
                                       f'seconds: {error}')
                     await asyncio.sleep(self.timeout)
@@ -310,22 +273,30 @@ class PhemexOrderPlacer(OrderPlacer):
 
         response = self.trading_conn.send_message('POST', '/orders', data=json.dumps(params))
         error_code = int(response.get('code', 200))
-        if error_code > 200:
-            if error_code == 10500:
-                raise AuthenticationError()
-            elif error_code == 401:
-                raise CredentialError()
-            else:
-                raise PhemexError(error_code)
 
-        order_id = response['data']['orderID']
-        order.set_order_id(order_id)
-        self.oms.pending_new(order)
+        if error_code > 200:
+            self.oms.track_order(order)
+            if error_code == 10500:
+                self.oms.reject(order, 'Authentiation error')
+            elif error_code == 401:
+                self.oms.reject(order, 'Credential error')
+            else:
+                self.oms.reject(order, f'Trading error: {error_code}')
+        elif 'data' in response:
+            order_id = response['data']['orderID']
+            order.set_order_id(order_id)
+            self.oms.pending_new(order)
+        else:
+            self.oms.track_order(order)
+            self.oms.reject(order, f'Unknown error: {response}')
 
     def cancel(self, order: Order):
         symbol = order.get_instrument().get_exchange_instrument_code()
         cl_ord_id = order.get_cl_ord_id()
         order_id = order.get_order_id()
+        if order_id is None:
+            self.oms.reject(order, 'Missing order ID; cannot cancel')
+            return
         response = self.trading_conn.send_message('DELETE', '/orders', {
             'symbol': symbol,
             'orderID': order_id

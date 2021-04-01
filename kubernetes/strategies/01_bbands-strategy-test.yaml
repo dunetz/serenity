@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bbands-strategy-test
+  labels:
+    app: bbands-strategy-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bbands-strategy-test
+  template:
+    metadata:
+      labels:
+        app: bbands-strategy-test
+    spec:
+      containers:
+        - name: bbands-strategy-test
+          image: cloudwallcapital/serenity:2020.12.09-b60
+          command: ["/app/venv-py3/bin/python"]
+          args: ["serenity/algo/engine.py", "/strategies/bbands1_live_config.yaml", "--strategy-dir=/strategies"]
+          env:
+            - name: POSTGRES_SERENITY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret-config
+                  key: serenity-password
+            - name: AZURE_CONNECT_STR
+              valueFrom:
+                secretKeyRef:
+                  name: azure-secret-config
+                  key: connect-str
+            - name: PHEMEX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: phemex-secret-config
+                  key: bbands-api-key-test
+            - name: PHEMEX_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: phemex-secret-config
+                  key: bbands-api-secret-test
+            - name: EXCHANGE_INSTANCE
+              value: test

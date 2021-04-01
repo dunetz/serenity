@@ -7,11 +7,11 @@ import websockets
 from tau.core import MutableSignal, NetworkScheduler, Event
 from tau.signal import Map, Filter
 
-from serenity.db import InstrumentCache
+from serenity.db.api import InstrumentCache
 from serenity.marketdata.fh.feedhandler import FeedHandlerState, WebsocketFeedHandler, ws_fh_main, Feed
-from serenity.marketdata import Trade
+from serenity.marketdata.api import Trade
 from serenity.model.exchange import ExchangeInstrument
-from serenity.trading import Side
+from serenity.trading.api import Side
 
 
 class BinanceFeedHandler(WebsocketFeedHandler):
@@ -44,9 +44,9 @@ class BinanceFeedHandler(WebsocketFeedHandler):
             symbol = product['symbol']
             base_ccy = product['baseAsset']
             quote_ccy = product['quoteAsset']
-            ccy_pair = self.instrument_cache.get_or_create_currency_pair(base_ccy, quote_ccy)
+            ccy_pair = self.instrument_cache.get_or_create_cryptocurrency_pair(base_ccy, quote_ccy)
             instrument = ccy_pair.get_instrument()
-            exch_instr = self.instrument_cache.get_or_create_exchange_instrument(symbol, instrument, "Binance")
+            exch_instr = self.instrument_cache.get_or_create_exchange_instrument(symbol, instrument, 'Binance')
 
             self.logger.info(f'\t{symbol} - {base_ccy}/{quote_ccy} [ID #{instrument.get_instrument_id()}]')
             self.known_instrument_ids[symbol] = exch_instr

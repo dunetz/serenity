@@ -1,0 +1,1611 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+         Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.9.3-beta" use-changelog="false" last-position="0,0" last-zoom="1.05" max-obj-count="31"
+	 default-schema="public" default-owner="postgres">
+<role name="sharadar"
+      login="true"
+      encrypted="true"
+      password="sharadardb">
+</role>
+
+<database name="sharadar" is-template="false" allow-conns="true" append-at-eod="true">
+	<appended-sql><![CDATA[GRANT USAGE ON SCHEMA sharadar TO sharadar;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA sharadar TO sharadar;
+GRANT SELECT, USAGE ON ALL SEQUENCES IN SCHEMA sharadar TO sharadar;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA sharadar TO sharadar;]]></appended-sql>
+</database>
+
+<schema name="public" layer="0" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<schema name="sharadar" layer="0" rect-visible="true" fill-color="#e1e1e1">
+	<role name="postgres"/>
+</schema>
+
+<sequence name="indicator_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="unit_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="corporate_action_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="ticker_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="fundamentals_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="institutional_holdings_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="event_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="equity_price_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="indicators" layer="0" collapse-mode="2" max-obj-count="9" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="300" y="540"/>
+	<column name="indicator_id" not-null="true" sequence="sharadar.indicator_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="table_name" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<column name="indicator" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<column name="is_filter" not-null="true">
+		<type name="bool" length="1"/>
+	</column>
+	<column name="is_primary_key" not-null="true">
+		<type name="bool" length="1"/>
+	</column>
+	<column name="title" not-null="true">
+		<type name="varchar" length="256"/>
+	</column>
+	<column name="description">
+		<type name="varchar" length="2048"/>
+	</column>
+	<column name="unit_type_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="indicators_pk" type="pk-constr" table="sharadar.indicators">
+		<columns names="indicator_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="unit_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="480" y="340"/>
+	<column name="unit_type_id" not-null="true" sequence="sharadar.unit_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="unit_type_code" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<constraint name="unit_type_pk" type="pk-constr" table="sharadar.unit_type">
+		<columns names="unit_type_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="unit_type_code_uq" type="uq-constr" table="sharadar.unit_type">
+		<columns names="unit_type_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="event_code_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="event" layer="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="320" y="800"/>
+	<column name="event_id" not-null="true" sequence="sharadar.event_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="ticker" not-null="true">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="ticker_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="event_date" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="event_code_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="event_pk" type="pk-constr" table="sharadar.event">
+		<columns names="event_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="insider_holdings_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="scale_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="sector_map_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<sequence name="sector_code_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="sector_map" layer="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1000" y="800"/>
+	<column name="sector_map_id" not-null="true" sequence="sharadar.sector_map_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="sector_code_type_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="sector_code">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="sector">
+		<type name="varchar" length="64"/>
+	</column>
+	<column name="industry">
+		<type name="varchar" length="64"/>
+	</column>
+	<constraint name="sector_map_pk" type="pk-constr" table="sharadar.sector_map">
+		<columns names="sector_map_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="ticker_category_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="ticker" layer="0" collapse-mode="2" max-obj-count="30" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="720" y="120"/>
+	<column name="ticker_id" not-null="true" sequence="sharadar.ticker_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="table_name" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<column name="perma_ticker_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="ticker">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="name" not-null="true">
+		<type name="varchar" length="256"/>
+	</column>
+	<column name="exchange_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="is_delisted" not-null="true">
+		<type name="bool" length="1"/>
+	</column>
+	<column name="ticker_category_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="cusips">
+		<type name="varchar" length="256"/>
+	</column>
+	<column name="sic_sector_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="fama_sector_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="sector_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="market_cap_scale_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="revenue_scale_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="related_tickers">
+		<type name="varchar" length="256"/>
+	</column>
+	<column name="currency_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="location">
+		<type name="varchar" length="64"/>
+	</column>
+	<column name="last_updated">
+		<type name="date" length="0"/>
+	</column>
+	<column name="first_added">
+		<type name="date" length="0"/>
+	</column>
+	<column name="first_price_date">
+		<type name="date" length="0"/>
+	</column>
+	<column name="last_price_date">
+		<type name="date" length="0"/>
+	</column>
+	<column name="first_quarter">
+		<type name="date" length="0"/>
+	</column>
+	<column name="last_quarter">
+		<type name="date" length="0"/>
+	</column>
+	<column name="secfilings">
+		<type name="varchar" length="256"/>
+	</column>
+	<column name="company_site">
+		<type name="varchar" length="256"/>
+	</column>
+	<constraint name="tickers_pk" type="pk-constr" table="sharadar.ticker">
+		<columns names="ticker_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="scale" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1100" y="160"/>
+	<column name="scale_id" not-null="true" sequence="sharadar.scale_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="scale_code" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<constraint name="scale_pk" type="pk-constr" table="sharadar.scale">
+		<columns names="scale_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="scale_code_uq" type="uq-constr" table="sharadar.scale">
+		<columns names="scale_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="cusip_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="ticker_category" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="420" y="140"/>
+	<column name="ticker_category_id" not-null="true" sequence="sharadar.ticker_category_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="ticker_category_code">
+		<type name="varchar" length="64"/>
+	</column>
+	<constraint name="ticker_category_pk" type="pk-constr" table="sharadar.ticker_category">
+		<columns names="ticker_category_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="ticker_category_code_uq" type="uq-constr" table="sharadar.ticker_category">
+		<columns names="ticker_category_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="exchange_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="exchange" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1380" y="380"/>
+	<column name="exchange_id" not-null="true" sequence="sharadar.exchange_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="exchange_code" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<constraint name="exchange_pk" type="pk-constr" table="sharadar.exchange">
+		<columns names="exchange_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="exchange_code_uq" type="uq-constr" table="sharadar.exchange">
+		<columns names="exchange_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="currency_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="currency" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1120" y="280"/>
+	<column name="currency_id" not-null="true" sequence="sharadar.currency_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="currency_code" not-null="true">
+		<type name="varchar" length="8"/>
+	</column>
+	<constraint name="currency_pk" type="pk-constr" table="sharadar.currency">
+		<columns names="currency_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="currency_code_uq" type="uq-constr" table="sharadar.currency">
+		<columns names="currency_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="sector_code_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1240" y="1060"/>
+	<column name="sector_code_type_id" not-null="true" sequence="sharadar.sector_code_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="sector_code_type_code" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<constraint name="sector_code_type_pk" type="pk-constr" table="sharadar.sector_code_type">
+		<columns names="sector_code_type_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="event_code" layer="0" collapse-mode="2" max-obj-count="3" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="220" y="1020"/>
+	<column name="event_code_id" not-null="true" sequence="sharadar.event_code_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="event_code" not-null="true">
+		<type name="integer" length="64"/>
+	</column>
+	<column name="event_description" not-null="true">
+		<type name="varchar" length="256"/>
+	</column>
+	<constraint name="event_code_pk" type="pk-constr" table="sharadar.event_code">
+		<columns names="event_code_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="event_code_uq" type="uq-constr" table="sharadar.event_code">
+		<columns names="event_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="equity_price" layer="0" collapse-mode="2" max-obj-count="14" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="620" y="820"/>
+	<column name="equity_price_id" not-null="true" sequence="sharadar.equity_price_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="ticker" not-null="true">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="ticker_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="price_date" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="open" not-null="true">
+		<type name="money" length="0"/>
+	</column>
+	<column name="high" not-null="true">
+		<type name="money" length="0"/>
+	</column>
+	<column name="low" not-null="true">
+		<type name="money" length="0"/>
+	</column>
+	<column name="close" not-null="true">
+		<type name="money" length="0"/>
+	</column>
+	<column name="volume">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="dividends" not-null="true">
+		<type name="money" length="0"/>
+	</column>
+	<column name="close_unadj" not-null="true">
+		<type name="money" length="0"/>
+	</column>
+	<column name="last_updated" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<constraint name="equity_price_pk" type="pk-constr" table="sharadar.equity_price">
+		<columns names="equity_price_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="institutional_holdings" layer="0" collapse-mode="2" max-obj-count="10" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1540" y="920"/>
+	<column name="institutional_holdings_id" not-null="true" sequence="sharadar.institutional_holdings_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="ticker">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="ticker_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="institutional_investor_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="security_type_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="calendar_date" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="value" not-null="true">
+		<type name="money" length="0"/>
+	</column>
+	<column name="units" not-null="true">
+		<type name="int8" length="0"/>
+	</column>
+	<column name="price">
+		<type name="money" length="0"/>
+	</column>
+	<constraint name="institutional_holdings_pk" type="pk-constr" table="sharadar.institutional_holdings">
+		<columns names="institutional_holdings_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="insider_holdings" layer="0" collapse-mode="2" max-obj-count="31" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1660" y="400"/>
+	<column name="insider_holdings_id" not-null="true" sequence="sharadar.insider_holdings_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="ticker">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="ticker_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="filing_date" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="form_type_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="issuer_name" not-null="true">
+		<type name="varchar" length="128"/>
+	</column>
+	<column name="owner_name" not-null="true">
+		<type name="varchar" length="128"/>
+	</column>
+	<column name="officer_title">
+		<type name="varchar" length="128"/>
+	</column>
+	<column name="is_director" not-null="true">
+		<type name="bool" length="0"/>
+	</column>
+	<column name="is_officer" not-null="true">
+		<type name="bool" length="0"/>
+	</column>
+	<column name="is_ten_percent_owner" not-null="true">
+		<type name="bool" length="0"/>
+	</column>
+	<column name="transaction_date">
+		<type name="date" length="0"/>
+	</column>
+	<column name="security_ad_type_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="transaction_type_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="shares_owned_before_transaction">
+		<type name="int8" length="0"/>
+	</column>
+	<column name="transaction_shares">
+		<type name="int8" length="0"/>
+	</column>
+	<column name="shares_owned_following_transaction">
+		<type name="int8" length="0"/>
+	</column>
+	<column name="transaction_price_per_share">
+		<type name="money" length="0"/>
+	</column>
+	<column name="transaction_value">
+		<type name="money" length="0"/>
+	</column>
+	<column name="security_title_type_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="direct_or_indirect">
+		<type name="char" length="1"/>
+	</column>
+	<column name="nature_of_ownership">
+		<type name="varchar" length="128"/>
+	</column>
+	<column name="date_exercisable">
+		<type name="date" length="0"/>
+	</column>
+	<column name="price_exercisable">
+		<type name="money" length="0"/>
+	</column>
+	<column name="expiration_date">
+		<type name="date" length="0"/>
+	</column>
+	<column name="row_num" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="insider_holdings_pk" type="pk-constr" table="sharadar.insider_holdings">
+		<columns names="insider_holdings_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="institutional_investor_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="institutional_investor" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1980" y="1000"/>
+	<column name="institutional_investor_id" not-null="true" sequence="sharadar.institutional_investor_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="institutional_investor_name" not-null="true">
+		<type name="varchar" length="128"/>
+	</column>
+	<constraint name="institutional_investor_pk" type="pk-constr" table="sharadar.institutional_investor">
+		<columns names="institutional_investor_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="institutional_investor_uq" type="uq-constr" table="sharadar.institutional_investor">
+		<columns names="institutional_investor_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="security_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="security_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="2000" y="820"/>
+	<column name="security_type_id" not-null="true" sequence="sharadar.security_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="security_type_code" not-null="true">
+		<type name="varchar" length="8"/>
+	</column>
+	<constraint name="security_type_pk" type="pk-constr" table="sharadar.security_type">
+		<columns names="security_type_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="security_type_uq" type="uq-constr" table="sharadar.security_type">
+		<columns names="security_type_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="fundamentals" layer="0" collapse-mode="2" max-obj-count="135" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="900" y="980"/>
+	<column name="fundamentals_id" not-null="true" sequence="sharadar.fundamentals_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="ticker" not-null="true">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="ticker_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="dimension_type_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="calendar_date" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="date_key" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="report_period" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="last_updated" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="accoci">
+		<type name="money" length="0"/>
+	</column>
+	<column name="assets">
+		<type name="money" length="0"/>
+	</column>
+	<column name="assets_avg">
+		<type name="money" length="0"/>
+	</column>
+	<column name="assets_c">
+		<type name="money" length="0"/>
+	</column>
+	<column name="assets_nc">
+		<type name="money" length="0"/>
+	</column>
+	<column name="asset_turnover">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="bvps">
+		<type name="money" length="16" precision="8"/>
+	</column>
+	<column name="capex">
+		<type name="money" length="0"/>
+	</column>
+	<column name="cash_neq">
+		<type name="money" length="0"/>
+	</column>
+	<column name="cash_neq_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="cor">
+		<type name="money" length="0"/>
+	</column>
+	<column name="consol_inc">
+		<type name="money" length="0"/>
+	</column>
+	<column name="current_ratio">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="de">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="debt">
+		<type name="money" length="0"/>
+	</column>
+	<column name="debt_c">
+		<type name="money" length="0"/>
+	</column>
+	<column name="debt_nc">
+		<type name="money" length="0"/>
+	</column>
+	<column name="debt_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="deferred_rev">
+		<type name="money" length="0"/>
+	</column>
+	<column name="dep_amor">
+		<type name="money" length="0"/>
+	</column>
+	<column name="deposits">
+		<type name="money" length="0"/>
+	</column>
+	<column name="div_yield">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="dps">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ebit">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ebitda">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ebitda_margin">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="ebitda_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ebit_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ebt">
+		<type name="money" length="0"/>
+	</column>
+	<column name="eps">
+		<type name="money" length="0"/>
+	</column>
+	<column name="eps_dil">
+		<type name="money" length="0"/>
+	</column>
+	<column name="eps_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="equity">
+		<type name="money" length="0"/>
+	</column>
+	<column name="equity_avg">
+		<type name="money" length="0"/>
+	</column>
+	<column name="equity_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ev">
+		<type name="money" length="10" precision="8"/>
+	</column>
+	<column name="ev_ebit">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="ev_ebitda">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="fcf">
+		<type name="money" length="0"/>
+	</column>
+	<column name="fcf_ps">
+		<type name="money" length="0"/>
+	</column>
+	<column name="fx_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="gp">
+		<type name="money" length="0"/>
+	</column>
+	<column name="gross_margin">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="intangibles">
+		<type name="money" length="0"/>
+	</column>
+	<column name="int_exp">
+		<type name="money" length="0"/>
+	</column>
+	<column name="inv_cap">
+		<type name="money" length="0"/>
+	</column>
+	<column name="inv_cap_avg">
+		<type name="money" length="0"/>
+	</column>
+	<column name="inventory">
+		<type name="money" length="0"/>
+	</column>
+	<column name="investments">
+		<type name="money" length="0"/>
+	</column>
+	<column name="investments_c">
+		<type name="money" length="0"/>
+	</column>
+	<column name="investments_nc">
+		<type name="money" length="0"/>
+	</column>
+	<column name="liabilities">
+		<type name="money" length="0"/>
+	</column>
+	<column name="liabilities_c">
+		<type name="money" length="0"/>
+	</column>
+	<column name="liabilities_nc">
+		<type name="money" length="0"/>
+	</column>
+	<column name="market_cap">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_bus">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_common">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_debt">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_div">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_f">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_i">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_inv">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_o">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ncf_x">
+		<type name="money" length="0"/>
+	</column>
+	<column name="net_inc">
+		<type name="money" length="0"/>
+	</column>
+	<column name="net_inc_cmn">
+		<type name="money" length="0"/>
+	</column>
+	<column name="net_inc_cmn_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="net_inc_dis">
+		<type name="money" length="0"/>
+	</column>
+	<column name="net_inc_nci">
+		<type name="money" length="0"/>
+	</column>
+	<column name="net_margin">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="op_ex">
+		<type name="money" length="0"/>
+	</column>
+	<column name="op_inc">
+		<type name="money" length="0"/>
+	</column>
+	<column name="payables">
+		<type name="money" length="0"/>
+	</column>
+	<column name="payout_ratio">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="pb">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="pe">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="pe1">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="ppne_net">
+		<type name="money" length="0"/>
+	</column>
+	<column name="pref_div_is">
+		<type name="money" length="10" precision="8"/>
+	</column>
+	<column name="price">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ps">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="ps1">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="receivables">
+		<type name="money" length="0"/>
+	</column>
+	<column name="ret_earn">
+		<type name="money" length="0"/>
+	</column>
+	<column name="revenue">
+		<type name="money" length="0"/>
+	</column>
+	<column name="revenue_usd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="rnd">
+		<type name="money" length="0"/>
+	</column>
+	<column name="roa">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="roe">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="roic">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="ros">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="sb_comp">
+		<type name="money" length="0"/>
+	</column>
+	<column name="sgna">
+		<type name="money" length="0"/>
+	</column>
+	<column name="share_factor">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="shares_bas">
+		<type name="int8" length="0"/>
+	</column>
+	<column name="shares_wa">
+		<type name="int8" length="0"/>
+	</column>
+	<column name="shares_wa_dil">
+		<type name="int8" length="0"/>
+	</column>
+	<column name="sps">
+		<type name="money" length="16" precision="8"/>
+	</column>
+	<column name="tangibles">
+		<type name="money" length="0"/>
+	</column>
+	<column name="tax_assets">
+		<type name="money" length="0"/>
+	</column>
+	<column name="tax_exp">
+		<type name="money" length="0"/>
+	</column>
+	<column name="tax_liabilities">
+		<type name="money" length="0"/>
+	</column>
+	<column name="tbvps">
+		<type name="money" length="16" precision="8"/>
+	</column>
+	<column name="working_capital">
+		<type name="money" length="0"/>
+	</column>
+	<constraint name="fundamentals_pk" type="pk-constr" table="sharadar.fundamentals">
+		<columns names="fundamentals_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="form_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="form_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="2120" y="340"/>
+	<column name="form_type_id" not-null="true" sequence="sharadar.form_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="form_type_code" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<constraint name="form_type_pk" type="pk-constr" table="sharadar.form_type">
+		<columns names="form_type_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="form_type_uq" type="uq-constr" table="sharadar.form_type">
+		<columns names="form_type_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="security_ad_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="security_ad_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1820" y="200"/>
+	<column name="security_ad_type_id" not-null="true" sequence="sharadar.security_ad_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="security_ad_type_code" not-null="true">
+		<type name="varchar" length="8"/>
+	</column>
+	<constraint name="security_ad_type_pk" type="pk-constr" table="sharadar.security_ad_type">
+		<columns names="security_ad_type_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="security_ad_type_uq" type="uq-constr" table="sharadar.security_ad_type">
+		<columns names="security_ad_type_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="tranaction_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="transaction_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1540" y="200"/>
+	<column name="transaction_type_id" not-null="true" sequence="sharadar.tranaction_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="transaction_type_code" not-null="true">
+		<type name="varchar" length="8"/>
+	</column>
+	<constraint name="transaction_type_pk" type="pk-constr" table="sharadar.transaction_type">
+		<columns names="transaction_type_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="transaction_type_uq" type="uq-constr" table="sharadar.transaction_type">
+		<columns names="transaction_type_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="security_title_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="security_title_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="2200" y="660"/>
+	<column name="security_title_type_id" not-null="true" sequence="sharadar.security_title_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="security_title_type_code" not-null="true">
+		<type name="varchar" length="64"/>
+	</column>
+	<constraint name="security_title_type_pk" type="pk-constr" table="sharadar.security_title_type">
+		<columns names="security_title_type_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="security_title_type_uq" type="uq-constr" table="sharadar.security_title_type">
+		<columns names="security_title_type_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="dimension_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="dimension_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1440" y="2080"/>
+	<column name="dimension_type_id" not-null="true" sequence="sharadar.dimension_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="dimension_type_code" not-null="true">
+		<type name="varchar" length="8"/>
+	</column>
+	<constraint name="dimension_type_pk" type="pk-constr" table="sharadar.dimension_type">
+		<columns names="dimension_type_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="corp_action_type_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="corp_action_type" layer="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="260" y="1220"/>
+	<column name="corp_action_type_id" not-null="true" sequence="sharadar.corp_action_type_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="corp_action_type_code" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<constraint name="corp_action_type_pk" type="pk-constr" table="sharadar.corp_action_type">
+		<columns names="corp_action_type_id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="corp_action_type_uq" type="uq-constr" table="sharadar.corp_action_type">
+		<columns names="corp_action_type_code" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="corp_action" layer="0" collapse-mode="2" max-obj-count="10" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="540" y="1500"/>
+	<column name="corp_action_id" not-null="true" sequence="sharadar.corporate_action_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="corp_action_date" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="ticker">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="ticker_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="corp_action_type_id" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="name">
+		<type name="varchar" length="256"/>
+	</column>
+	<column name="value">
+		<type name="decimal" length="16" precision="4"/>
+	</column>
+	<column name="contra_ticker">
+		<type name="varchar" length="16"/>
+	</column>
+	<column name="contra_name">
+		<type name="varchar" length="256"/>
+	</column>
+	<constraint name="corp_action_pk" type="pk-constr" table="sharadar.corp_action">
+		<columns names="corp_action_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<index name="perma_ticker_idx" table="sharadar.ticker"
+	 concurrent="false" unique="false" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="perma_ticker_id"/>
+		</idxelement>
+</index>
+
+<index name="ticker_idx" table="sharadar.ticker"
+	 concurrent="false" unique="false" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="ticker"/>
+		</idxelement>
+</index>
+
+<index name="institutional_holdings_uq_idx" table="sharadar.institutional_holdings"
+	 concurrent="false" unique="true" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="ticker"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="institutional_investor_id"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="security_type_id"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="calendar_date"/>
+		</idxelement>
+</index>
+
+<index name="insider_holdings_uq_idx" table="sharadar.insider_holdings"
+	 concurrent="false" unique="true" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="ticker"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="filing_date"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="owner_name"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="form_type_id"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="row_num"/>
+		</idxelement>
+</index>
+
+<index name="event_uq_idx" table="sharadar.event"
+	 concurrent="false" unique="true" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="ticker"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="event_date"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="event_code_id"/>
+		</idxelement>
+</index>
+
+<index name="corp_action_uq_idx" table="sharadar.corp_action"
+	 concurrent="false" unique="true" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="ticker"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="corp_action_date"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="corp_action_type_id"/>
+		</idxelement>
+</index>
+
+<index name="equity_price_uq_idx" table="sharadar.equity_price"
+	 concurrent="false" unique="true" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="ticker"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="price_date"/>
+		</idxelement>
+</index>
+
+<index name="fundamentals_uq_idx" table="sharadar.fundamentals"
+	 concurrent="false" unique="true" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="ticker"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="dimension_type_id"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="date_key"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="report_period"/>
+		</idxelement>
+</index>
+
+<sequence name="batch_status_seq" cycle="false" start="1" increment="1" min-value="0" max-value="2147483647" cache="1">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="batch_status" layer="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="sharadar"/>
+	<role name="postgres"/>
+	<position x="1240" y="1220"/>
+	<column name="batch_status_id" not-null="true" sequence="sharadar.batch_status_seq">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="workflow_name" not-null="true">
+		<type name="varchar" length="64"/>
+	</column>
+	<column name="start_date">
+		<type name="date" length="0"/>
+	</column>
+	<column name="end_date">
+		<type name="date" length="0"/>
+	</column>
+	<column name="md5_checksum" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<column name="is_pending" not-null="true">
+		<type name="bool" length="0"/>
+	</column>
+	<constraint name="batch_status_pk" type="pk-constr" table="sharadar.batch_status">
+		<columns names="batch_status_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<index name="batch_status_uq_idx" table="sharadar.batch_status"
+	 concurrent="false" unique="true" fast-update="false" buffering="false"
+	 index-type="btree" factor="0">
+		<idxelement use-sorting="false">
+			<column name="workflow_name"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="start_date"/>
+		</idxelement>
+		<idxelement use-sorting="false">
+			<column name="end_date"/>
+		</idxelement>
+</index>
+
+<constraint name="unit_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.unit_type" table="sharadar.indicators">
+	<columns names="unit_type_id" ref-type="src-columns"/>
+	<columns names="unit_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="event_code_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.event_code" table="sharadar.event">
+	<columns names="event_code_id" ref-type="src-columns"/>
+	<columns names="event_code_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="ticker_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.ticker" table="sharadar.event">
+	<columns names="ticker_id" ref-type="src-columns"/>
+	<columns names="ticker_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="sector_code_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.sector_code_type" table="sharadar.sector_map">
+	<columns names="sector_code_type_id" ref-type="src-columns"/>
+	<columns names="sector_code_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="exchange_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.exchange" table="sharadar.ticker">
+	<columns names="exchange_id" ref-type="src-columns"/>
+	<columns names="exchange_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="ticker_category_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.ticker_category" table="sharadar.ticker">
+	<columns names="ticker_category_id" ref-type="src-columns"/>
+	<columns names="ticker_category_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="sic_sector_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.sector_map" table="sharadar.ticker">
+	<columns names="sic_sector_id" ref-type="src-columns"/>
+	<columns names="sector_map_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="fama_sector_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.sector_map" table="sharadar.ticker">
+	<columns names="fama_sector_id" ref-type="src-columns"/>
+	<columns names="sector_map_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="sector_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.sector_map" table="sharadar.ticker">
+	<columns names="sector_id" ref-type="src-columns"/>
+	<columns names="sector_map_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="market_cap_scale_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.scale" table="sharadar.ticker">
+	<columns names="market_cap_scale_id" ref-type="src-columns"/>
+	<columns names="scale_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="revenue_scale_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.scale" table="sharadar.ticker">
+	<columns names="revenue_scale_id" ref-type="src-columns"/>
+	<columns names="scale_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="currency_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.currency" table="sharadar.ticker">
+	<columns names="currency_id" ref-type="src-columns"/>
+	<columns names="currency_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="ticker_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.ticker" table="sharadar.equity_price">
+	<columns names="ticker_id" ref-type="src-columns"/>
+	<columns names="ticker_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="ticker_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.ticker" table="sharadar.institutional_holdings">
+	<columns names="ticker_id" ref-type="src-columns"/>
+	<columns names="ticker_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="institutional_investor_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.institutional_investor" table="sharadar.institutional_holdings">
+	<columns names="institutional_investor_id" ref-type="src-columns"/>
+	<columns names="institutional_investor_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="security_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.security_type" table="sharadar.institutional_holdings">
+	<columns names="security_type_id" ref-type="src-columns"/>
+	<columns names="security_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="ticker_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.ticker" table="sharadar.insider_holdings">
+	<columns names="ticker_id" ref-type="src-columns"/>
+	<columns names="ticker_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="form_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.form_type" table="sharadar.insider_holdings">
+	<columns names="form_type_id" ref-type="src-columns"/>
+	<columns names="form_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="security_ad_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.security_ad_type" table="sharadar.insider_holdings">
+	<columns names="security_ad_type_id" ref-type="src-columns"/>
+	<columns names="security_ad_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="transaction_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.transaction_type" table="sharadar.insider_holdings">
+	<columns names="transaction_type_id" ref-type="src-columns"/>
+	<columns names="transaction_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="security_title_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.security_title_type" table="sharadar.insider_holdings">
+	<columns names="security_title_type_id" ref-type="src-columns"/>
+	<columns names="security_title_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="ticker_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.ticker" table="sharadar.fundamentals">
+	<columns names="ticker_id" ref-type="src-columns"/>
+	<columns names="ticker_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="dimension_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.dimension_type" table="sharadar.fundamentals">
+	<columns names="dimension_type_id" ref-type="src-columns"/>
+	<columns names="dimension_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="ticker_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.ticker" table="sharadar.corp_action">
+	<columns names="ticker_id" ref-type="src-columns"/>
+	<columns names="ticker_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="corp_action_type_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="sharadar.corp_action_type" table="sharadar.corp_action">
+	<columns names="corp_action_type_id" ref-type="src-columns"/>
+	<columns names="corp_action_type_id" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_indicators_unit_type" type="relfk" layer="0"
+	 src-table="sharadar.indicators"
+	 dst-table="sharadar.unit_type" reference-fk="unit_type_fk"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="-7.8143" y="-13.4266"/>
+	</label>
+</relationship>
+
+<relationship name="rel_events_event_code" type="relfk" layer="0"
+	 src-table="sharadar.event"
+	 dst-table="sharadar.event_code" reference-fk="event_code_fk"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="-6.27228" y="-26.6266"/>
+	</label>
+</relationship>
+
+<relationship name="rel_sector_map_sector_code_type" type="relfk" layer="0"
+	 src-table="sharadar.sector_map"
+	 dst-table="sharadar.sector_code_type" reference-fk="sector_code_type_fk"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="29.9968" y="-16.3188"/>
+	</label>
+</relationship>
+
+<relationship name="rel_tickers_sector_map" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.sector_map" reference-fk="sic_sector_fk"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-25.3438" y="-8.22656"/>
+	</label>
+</relationship>
+
+<relationship name="rel_tickers_sector_map1" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.sector_map" reference-fk="fama_sector_fk"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-42.148" y="-28.2266"/>
+	</label>
+</relationship>
+
+<relationship name="rel_tickers_scale" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.scale" reference-fk="market_cap_scale_fk"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="2.88742" y="-13.4312"/>
+	</label>
+</relationship>
+
+<relationship name="rel_tickers_scale1" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.scale" reference-fk="revenue_scale_fk"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-15.6126" y="-18.8349"/>
+	</label>
+</relationship>
+
+<relationship name="rel_tickers_sector_map2" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.sector_map" reference-fk="sector_fk"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="50.4911" y="-8.22656"/>
+	</label>
+</relationship>
+
+<relationship name="rel_ticker_ticker_category" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.ticker_category" reference-fk="ticker_category_fk"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="-0.775083" y="-41.5644"/>
+	</label>
+</relationship>
+
+<relationship name="rel_ticker_exchange" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.exchange" reference-fk="exchange_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_ticker_currency" type="relfk" layer="0"
+	 src-table="sharadar.ticker"
+	 dst-table="sharadar.currency" reference-fk="currency_fk"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="3.01867" y="-20.0474"/>
+	</label>
+</relationship>
+
+<relationship name="rel_events_ticker" type="relfk" layer="0"
+	 src-table="sharadar.event"
+	 dst-table="sharadar.ticker" reference-fk="ticker_fk"
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="69.439" y="-64.7399"/>
+	</label>
+</relationship>
+
+<relationship name="rel_equity_prices_ticker" type="relfk" layer="0"
+	 src-table="sharadar.equity_price"
+	 dst-table="sharadar.ticker" reference-fk="ticker_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_institutional_holdings_ticker" type="relfk" layer="0"
+	 src-table="sharadar.institutional_holdings"
+	 dst-table="sharadar.ticker" reference-fk="ticker_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_insider_holdings_ticker" type="relfk" layer="0"
+	 src-table="sharadar.insider_holdings"
+	 dst-table="sharadar.ticker" reference-fk="ticker_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_institutional_holdings_institutional_investor" type="relfk" layer="0"
+	 src-table="sharadar.institutional_holdings"
+	 dst-table="sharadar.institutional_investor" reference-fk="institutional_investor_fk"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_institutional_holdings_security_type" type="relfk" layer="0"
+	 src-table="sharadar.institutional_holdings"
+	 dst-table="sharadar.security_type" reference-fk="security_type_fk"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_fundamentals_ticker" type="relfk" layer="0"
+	 src-table="sharadar.fundamentals"
+	 dst-table="sharadar.ticker" reference-fk="ticker_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_insider_holdings_form_type" type="relfk" layer="0"
+	 src-table="sharadar.insider_holdings"
+	 dst-table="sharadar.form_type" reference-fk="form_type_fk"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_insider_holdings_security_ad" type="relfk" layer="0"
+	 src-table="sharadar.insider_holdings"
+	 dst-table="sharadar.security_ad_type" reference-fk="security_ad_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_insider_holdings_transaction_type" type="relfk" layer="0"
+	 src-table="sharadar.insider_holdings"
+	 dst-table="sharadar.transaction_type" reference-fk="transaction_type_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_insider_holdings_security_title_type" type="relfk" layer="0"
+	 src-table="sharadar.insider_holdings"
+	 dst-table="sharadar.security_title_type" reference-fk="security_title_type_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_fundamentals_dimension_type" type="relfk" layer="0"
+	 src-table="sharadar.fundamentals"
+	 dst-table="sharadar.dimension_type" reference-fk="dimension_type_fk"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_corporate_actions_ticker" type="relfk" layer="0"
+	 src-table="sharadar.corp_action"
+	 dst-table="sharadar.ticker" reference-fk="ticker_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_corporate_actions_corp_action_type" type="relfk" layer="0"
+	 src-table="sharadar.corp_action"
+	 dst-table="sharadar.corp_action_type" reference-fk="corp_action_type_fk"
+	 src-required="false" dst-required="true"/>
+
+</dbmodel>

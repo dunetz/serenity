@@ -1,0 +1,36 @@
+api-version: v1Beta
+feedhandlers:
+  - exchange: Phemex
+    include_symbol: BTCUSD
+order_placers:
+  - exchange: Phemex
+environment:
+  - key: EXCHANGE_INSTANCE
+    value-source: SYSTEM_ENV
+  - key: EXCHANGE_ACCOUNT
+    value: 9019590001
+  - key: PHEMEX_API_KEY
+    value-source: SYSTEM_ENV
+  - key: PHEMEX_API_SECRET
+    value-source: SYSTEM_ENV
+  - key: EXTRA_OUTPUTS
+    value: Position,TradeFlows,BollingerBands,PnL
+strategies:
+  - name: BollingerBands
+    module: bbands1
+    strategy-class: BollingerBandsStrategy1
+    environment:
+      - key: TRADING_INSTRUMENT
+        value: PHEMEX:BTCUSD
+      - key: BBANDS_BIN_MINUTES
+        value: 5
+      - key: BBANDS_WINDOW
+        value: 20
+      - key: BBANDS_NUM_STD
+        value: 3
+      - key: BBANDS_STOP_STD
+        value: 2
+      - key: BBANDS_QTY
+        value: 100000
+      - key: BBANDS_COOL_SECONDS
+        value: 15

@@ -4,7 +4,8 @@ from tau.core import HistoricNetworkScheduler
 from tau.event import Do
 
 from serenity.model.exchange import ExchangeInstrument
-from serenity.trading import OrderManagerService, MarketOrder, Side, OrderStatus, Reject, CancelReject
+from serenity.trading.api import MarketOrder, Side, OrderStatus, Reject, CancelReject
+from serenity.trading.oms import OrderManagerService
 
 from pytest_mock import MockFixture
 

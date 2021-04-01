@@ -9,15 +9,17 @@ import yaml
 from phemex import AuthCredentials
 from tau.core import RealtimeNetworkScheduler
 
-from serenity.algo import StrategyContext
-from serenity.analytics import HDF5DataCaptureService, Mode
-from serenity.db import InstrumentCache, connect_serenity_db, TypeCodeCache
+from serenity.algo.api import StrategyContext
+from serenity.analytics.api import HDF5DataCaptureService, Mode
+from serenity.booker.api import TimescaleDbTradeBookingService
+from serenity.db.api import InstrumentCache, connect_serenity_db, TypeCodeCache
 from serenity.marketdata.fh.binance_fh import BinanceFeedHandler
 from serenity.marketdata.fh.coinbasepro_fh import CoinbaseProFeedHandler
 from serenity.marketdata.fh.feedhandler import FeedHandlerRegistry, FeedHandlerMarketdataService
 from serenity.marketdata.fh.phemex_fh import PhemexFeedHandler
-from serenity.position import PositionService
-from serenity.trading import OrderPlacerService, OrderManagerService
+from serenity.pnl.phemex import PhemexMarkService
+from serenity.position.api import PositionService
+from serenity.trading.oms import OrderManagerService, OrderPlacerService
 from serenity.trading.connector.phemex_api import PhemexOrderPlacer, PhemexExchangePositionService
 from serenity.utils import init_logging, custom_asyncio_error_handler, Environment
 
@@ -58,8 +60,10 @@ class AlgoEngine:
                 logger.info('Registering feedhandlers')
                 for feedhandler in config['feedhandlers']:
                     fh_name = feedhandler['exchange']
+                    include_symbol = feedhandler.get('include_symbol', '*')
                     if fh_name == 'Phemex':
-                        self.fh_registry.register(PhemexFeedHandler(scheduler, instrument_cache, instance_id))
+                        self.fh_registry.register(PhemexFeedHandler(scheduler, instrument_cache, include_symbol,
+                                                                    instance_id))
                     elif fh_name == 'Binance':
                         self.fh_registry.register(BinanceFeedHandler(scheduler, instrument_cache, instance_id))
                     elif fh_name == 'CoinbasePro':
@@ -67,12 +71,17 @@ class AlgoEngine:
                     else:
                         raise ValueError(f'Unsupported feedhandler type: {fh_name}')
 
-            oms = OrderManagerService(scheduler)
+            oms = OrderManagerService(scheduler, TimescaleDbTradeBookingService())
             op_service = OrderPlacerService(scheduler, oms)
             md_service = FeedHandlerMarketdataService(scheduler, self.fh_registry, instance_id)
+            mark_service = PhemexMarkService(scheduler, instrument_cache, instance_id)
             self.xps = None
 
-            extra_outputs = self.engine_env.getenv('EXTRA_OUTPUTS', '').split(',')
+            extra_outputs_txt = self.engine_env.getenv('EXTRA_OUTPUTS')
+            if extra_outputs_txt is None:
+                extra_outputs = []
+            else:
+                extra_outputs = extra_outputs_txt.split(',')
             self.dcs = HDF5DataCaptureService(Mode.LIVE, scheduler, extra_outputs)
 
             if 'order_placers' in config:
@@ -111,8 +120,8 @@ class AlgoEngine:
                 module = importlib.import_module(module)
                 klass = getattr(module, strategy_class)
                 strategy_instance = klass()
-                ctx = StrategyContext(scheduler, instrument_cache, md_service, op_service, self.ps, self.xps, self.dcs,
-                                      env.values)
+                ctx = StrategyContext(scheduler, instrument_cache, md_service, mark_service, op_service, self.ps,
+                                      self.xps, self.dcs, env.values)
                 self.strategies.append((strategy_instance, ctx))
 
     def start(self):

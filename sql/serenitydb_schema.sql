@@ -1,6 +1,6 @@
 -- Database generated with pgModeler (PostgreSQL Database Modeler).
--- pgModeler  version: 0.9.2_snapshot20191127
--- PostgreSQL version: 11.0
+-- pgModeler  version: 0.9.3-beta
+-- PostgreSQL version: 12.0
 -- Project Site: pgmodeler.io
 -- Model Author: ---
 
@@ -17,7 +17,7 @@
 -- DROP SCHEMA IF EXISTS serenity CASCADE;
 CREATE SCHEMA serenity;
 -- ddl-end --
--- ALTER SCHEMA serenity OWNER TO postgres;
+ALTER SCHEMA serenity OWNER TO postgres;
 -- ddl-end --
 
 SET search_path TO pg_catalog,public,serenity;
@@ -39,7 +39,7 @@ CREATE TABLE serenity.exchange_trade (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_trade OWNER TO postgres;
+ALTER TABLE serenity.exchange_trade OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange_order_seq | type: SEQUENCE --
@@ -53,7 +53,7 @@ CREATE SEQUENCE serenity.exchange_order_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_order_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_order_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange_fill_seq | type: SEQUENCE --
@@ -67,31 +67,36 @@ CREATE SEQUENCE serenity.exchange_fill_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_fill_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_fill_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange | type: TABLE --
 -- DROP TABLE IF EXISTS serenity.exchange CASCADE;
 CREATE TABLE serenity.exchange (
 	exchange_id integer NOT NULL,
+	venue_type_id smallint,
 	exchange_code varchar(32) NOT NULL,
-	CONSTRAINT exchange_pk PRIMARY KEY (exchange_id),
-	CONSTRAINT exchange_code_uq UNIQUE (exchange_code)
+	exchange_name varchar(128) NOT NULL,
+	exchange_calendar varchar(32),
+	exchange_tz varchar(32),
+	CONSTRAINT exchange_pk PRIMARY KEY (exchange_id)
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange OWNER TO postgres;
+ALTER TABLE serenity.exchange OWNER TO postgres;
 -- ddl-end --
 
-INSERT INTO serenity.exchange (exchange_id, exchange_code) VALUES (E'1', E'CoinbasePro');
+INSERT INTO serenity.exchange (exchange_id, exchange_code, venue_type_id, exchange_name) VALUES (E'1', E'COINBASEPRO', E'1', E'Coinbase Pro');
 -- ddl-end --
-INSERT INTO serenity.exchange (exchange_id, exchange_code) VALUES (E'2', E'Gemini');
+INSERT INTO serenity.exchange (exchange_id, exchange_code, venue_type_id, exchange_name) VALUES (E'2', E'GEMINI', E'1', E'Gemini');
 -- ddl-end --
-INSERT INTO serenity.exchange (exchange_id, exchange_code) VALUES (E'3', E'Binance');
+INSERT INTO serenity.exchange (exchange_id, exchange_code, venue_type_id, exchange_name) VALUES (E'3', E'BINANCE', E'1', E'Binance');
 -- ddl-end --
-INSERT INTO serenity.exchange (exchange_id, exchange_code) VALUES (E'4', E'Coinbase');
+INSERT INTO serenity.exchange (exchange_id, exchange_code, venue_type_id, exchange_name) VALUES (E'4', E'COINBASE', E'1', E'Coinbase');
 -- ddl-end --
-INSERT INTO serenity.exchange (exchange_id, exchange_code) VALUES (E'5', E'Phemex');
+INSERT INTO serenity.exchange (exchange_id, exchange_code, venue_type_id, exchange_name) VALUES (E'5', E'POLYGON', E'3', E'Polygon.io');
+-- ddl-end --
+INSERT INTO serenity.exchange (exchange_id, exchange_code, venue_type_id, exchange_name) VALUES (E'6', E'PHEMEX', E'1', E'Phemex');
 -- ddl-end --
 
 -- object: serenity.exchange_order | type: TABLE --
@@ -112,7 +117,7 @@ CREATE TABLE serenity.exchange_order (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_order OWNER TO postgres;
+ALTER TABLE serenity.exchange_order OWNER TO postgres;
 -- ddl-end --
 
 -- object: exchange_fk | type: CONSTRAINT --
@@ -133,7 +138,7 @@ CREATE SEQUENCE serenity.destination_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.destination_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.destination_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange_account_seq | type: SEQUENCE --
@@ -147,7 +152,7 @@ CREATE SEQUENCE serenity.exchange_account_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_account_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_account_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange_account | type: TABLE --
@@ -160,7 +165,7 @@ CREATE TABLE serenity.exchange_account (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_account OWNER TO postgres;
+ALTER TABLE serenity.exchange_account OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.order_seq | type: SEQUENCE --
@@ -174,7 +179,7 @@ CREATE SEQUENCE serenity.order_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.order_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.order_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.fill_seq | type: SEQUENCE --
@@ -188,7 +193,7 @@ CREATE SEQUENCE serenity.fill_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.fill_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.fill_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity."order" | type: TABLE --
@@ -202,6 +207,8 @@ CREATE TABLE serenity."order" (
 	time_in_force_id integer NOT NULL,
 	destination_id integer NOT NULL,
 	parent_order_id integer,
+	order_uuid varchar(64) NOT NULL,
+	cl_ord_id varchar(64) NOT NULL,
 	price decimal(24,16),
 	quantity decimal(24,16) NOT NULL,
 	create_time timestamp NOT NULL,
@@ -209,7 +216,7 @@ CREATE TABLE serenity."order" (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity."order" OWNER TO postgres;
+ALTER TABLE serenity."order" OWNER TO postgres;
 -- ddl-end --
 
 -- object: exchange_account_fk | type: CONSTRAINT --
@@ -233,7 +240,7 @@ CREATE TABLE serenity.exchange_fill (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_fill OWNER TO postgres;
+ALTER TABLE serenity.exchange_fill OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.instrument_seq | type: SEQUENCE --
@@ -247,7 +254,7 @@ CREATE SEQUENCE serenity.instrument_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.instrument_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.instrument_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange_instrument_seq | type: SEQUENCE --
@@ -261,7 +268,7 @@ CREATE SEQUENCE serenity.exchange_instrument_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_instrument_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_instrument_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.instrument | type: TABLE --
@@ -274,7 +281,7 @@ CREATE TABLE serenity.instrument (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.instrument OWNER TO postgres;
+ALTER TABLE serenity.instrument OWNER TO postgres;
 -- ddl-end --
 
 -- object: instrument_fk | type: CONSTRAINT --
@@ -295,7 +302,7 @@ CREATE TABLE serenity.exchange_instrument (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_instrument OWNER TO postgres;
+ALTER TABLE serenity.exchange_instrument OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.currency_seq | type: SEQUENCE --
@@ -309,7 +316,7 @@ CREATE SEQUENCE serenity.currency_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.currency_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.currency_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.currency_pair_seq | type: SEQUENCE --
@@ -323,7 +330,7 @@ CREATE SEQUENCE serenity.currency_pair_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.currency_pair_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.currency_pair_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.currency_pair | type: TABLE --
@@ -337,7 +344,7 @@ CREATE TABLE serenity.currency_pair (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.currency_pair OWNER TO postgres;
+ALTER TABLE serenity.currency_pair OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.trading_account_seq | type: SEQUENCE --
@@ -351,7 +358,7 @@ CREATE SEQUENCE serenity.trading_account_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.trading_account_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.trading_account_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.trading_account | type: TABLE --
@@ -364,7 +371,7 @@ CREATE TABLE serenity.trading_account (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.trading_account OWNER TO postgres;
+ALTER TABLE serenity.trading_account OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.time_in_force | type: TABLE --
@@ -376,7 +383,7 @@ CREATE TABLE serenity.time_in_force (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.time_in_force OWNER TO postgres;
+ALTER TABLE serenity.time_in_force OWNER TO postgres;
 -- ddl-end --
 
 INSERT INTO serenity.time_in_force (time_in_force_id, time_in_force_code) VALUES (E'1', E'Day');
@@ -408,7 +415,7 @@ CREATE TABLE serenity.order_type (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.order_type OWNER TO postgres;
+ALTER TABLE serenity.order_type OWNER TO postgres;
 -- ddl-end --
 
 INSERT INTO serenity.order_type (order_type_id, order_type_code) VALUES (E'1', E'Market');
@@ -434,7 +441,7 @@ CREATE SEQUENCE serenity.exchange_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.side | type: TABLE --
@@ -446,7 +453,7 @@ CREATE TABLE serenity.side (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.side OWNER TO postgres;
+ALTER TABLE serenity.side OWNER TO postgres;
 -- ddl-end --
 
 INSERT INTO serenity.side (side_id, side_code) VALUES (E'1', E'Buy');
@@ -500,7 +507,7 @@ CREATE SEQUENCE serenity.portfolio_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.portfolio_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.portfolio_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.portfolio | type: TABLE --
@@ -512,7 +519,7 @@ CREATE TABLE serenity.portfolio (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.portfolio OWNER TO postgres;
+ALTER TABLE serenity.portfolio OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.instrument_type | type: TABLE --
@@ -524,12 +531,16 @@ CREATE TABLE serenity.instrument_type (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.instrument_type OWNER TO postgres;
+ALTER TABLE serenity.instrument_type OWNER TO postgres;
 -- ddl-end --
 
-INSERT INTO serenity.instrument_type (instrument_type_id, instrument_type_code) VALUES (E'1', E'CurrencyPair');
+INSERT INTO serenity.instrument_type (instrument_type_id, instrument_type_code) VALUES (E'1', E'Cash');
 -- ddl-end --
-INSERT INTO serenity.instrument_type (instrument_type_id, instrument_type_code) VALUES (E'2', E'Cash');
+INSERT INTO serenity.instrument_type (instrument_type_id, instrument_type_code) VALUES (E'2', E'FX');
+-- ddl-end --
+INSERT INTO serenity.instrument_type (instrument_type_id, instrument_type_code) VALUES (E'3', E'CryptoCurrencyPair');
+-- ddl-end --
+INSERT INTO serenity.instrument_type (instrument_type_id, instrument_type_code) VALUES (E'4', E'PerpetualFuture');
 -- ddl-end --
 
 -- object: instrument_type_fk | type: CONSTRAINT --
@@ -548,7 +559,7 @@ CREATE TABLE serenity.destination_type (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.destination_type OWNER TO postgres;
+ALTER TABLE serenity.destination_type OWNER TO postgres;
 -- ddl-end --
 
 INSERT INTO serenity.destination_type (destination_type_id, destination_type_code) VALUES (E'1', E'Exchange');
@@ -569,7 +580,7 @@ CREATE SEQUENCE serenity.exchange_destination_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_destination_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_destination_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange_destination | type: TABLE --
@@ -582,7 +593,7 @@ CREATE TABLE serenity.exchange_destination (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_destination OWNER TO postgres;
+ALTER TABLE serenity.exchange_destination OWNER TO postgres;
 -- ddl-end --
 
 -- object: instrument_fk | type: CONSTRAINT --
@@ -602,7 +613,7 @@ ALTER TABLE serenity.currency_pair ADD CONSTRAINT currency_pair_uq UNIQUE (instr
 CREATE TABLE serenity.fill (
 	fill_id integer NOT NULL DEFAULT nextval('serenity.fill_seq'::regclass),
 	order_id integer,
-	trade_id bigint NOT NULL,
+	exec_id varchar(64) NOT NULL,
 	fill_price decimal(24,16) NOT NULL,
 	quantity decimal(24,16) NOT NULL,
 	create_time timestamp NOT NULL,
@@ -610,7 +621,7 @@ CREATE TABLE serenity.fill (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.fill OWNER TO postgres;
+ALTER TABLE serenity.fill OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.destination | type: TABLE --
@@ -622,7 +633,7 @@ CREATE TABLE serenity.destination (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.destination OWNER TO postgres;
+ALTER TABLE serenity.destination OWNER TO postgres;
 -- ddl-end --
 
 -- object: exchange_fk | type: CONSTRAINT --
@@ -773,15 +784,6 @@ CREATE INDEX trade_id_idx ON serenity.exchange_fill
 	);
 -- ddl-end --
 
--- object: exchange_code | type: INDEX --
--- DROP INDEX IF EXISTS serenity.exchange_code CASCADE;
-CREATE UNIQUE INDEX exchange_code ON serenity.exchange
-	USING btree
-	(
-	  exchange_code
-	);
--- ddl-end --
-
 -- object: exchange_account_num_idx | type: INDEX --
 -- DROP INDEX IF EXISTS serenity.exchange_account_num_idx CASCADE;
 CREATE UNIQUE INDEX exchange_account_num_idx ON serenity.exchange_account
@@ -851,7 +853,7 @@ CREATE UNIQUE INDEX instrument_code_idx ON serenity.instrument
 CREATE UNIQUE INDEX fill_trade_id_idx ON serenity.fill
 	USING btree
 	(
-	  trade_id
+	  exec_id
 	);
 -- ddl-end --
 
@@ -866,7 +868,7 @@ CREATE SEQUENCE serenity.position_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.position_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.position_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.cash_instrument_seq | type: SEQUENCE --
@@ -880,7 +882,7 @@ CREATE SEQUENCE serenity.cash_instrument_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.cash_instrument_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.cash_instrument_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity."position" | type: TABLE --
@@ -896,7 +898,7 @@ CREATE TABLE serenity."position" (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity."position" OWNER TO postgres;
+ALTER TABLE serenity."position" OWNER TO postgres;
 -- ddl-end --
 
 -- object: instrument_fk | type: CONSTRAINT --
@@ -916,7 +918,7 @@ CREATE TABLE serenity.cash_instrument (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.cash_instrument OWNER TO postgres;
+ALTER TABLE serenity.cash_instrument OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.currency | type: TABLE --
@@ -928,7 +930,7 @@ CREATE TABLE serenity.currency (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.currency OWNER TO postgres;
+ALTER TABLE serenity.currency OWNER TO postgres;
 -- ddl-end --
 
 -- object: trading_account_fk | type: CONSTRAINT --
@@ -965,7 +967,7 @@ CREATE TABLE serenity.exchange_transfer_type (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_transfer_type OWNER TO postgres;
+ALTER TABLE serenity.exchange_transfer_type OWNER TO postgres;
 -- ddl-end --
 
 INSERT INTO serenity.exchange_transfer_type (exchange_transfer_type_id, exchange_transfer_type_code) VALUES (E'1', E'Deposit');
@@ -984,7 +986,7 @@ CREATE SEQUENCE serenity.exchange_transfer_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_transfer_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_transfer_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.exchange_transfer | type: TABLE --
@@ -1003,7 +1005,7 @@ CREATE TABLE serenity.exchange_transfer (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_transfer OWNER TO postgres;
+ALTER TABLE serenity.exchange_transfer OWNER TO postgres;
 -- ddl-end --
 
 -- object: currency_fk | type: CONSTRAINT --
@@ -1022,7 +1024,7 @@ CREATE TABLE serenity.exchange_transfer_method (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.exchange_transfer_method OWNER TO postgres;
+ALTER TABLE serenity.exchange_transfer_method OWNER TO postgres;
 -- ddl-end --
 
 INSERT INTO serenity.exchange_transfer_method (exchange_transfer_method_id, exchange_transfer_method_code) VALUES (E'1', E'ACH');
@@ -1064,7 +1066,7 @@ CREATE SEQUENCE serenity.exchange_transfer_destination_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.exchange_transfer_destination_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.exchange_transfer_destination_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: exchange_transfer_type_code_idx | type: INDEX --
@@ -1083,7 +1085,7 @@ CREATE TABLE serenity.position_fill (
 	fill_id integer NOT NULL
 );
 -- ddl-end --
--- ALTER TABLE serenity.position_fill OWNER TO postgres;
+ALTER TABLE serenity.position_fill OWNER TO postgres;
 -- ddl-end --
 
 -- object: position_fk | type: CONSTRAINT --
@@ -1116,7 +1118,7 @@ CREATE SEQUENCE serenity.mark_seq
 	NO CYCLE
 	OWNED BY NONE;
 -- ddl-end --
--- ALTER SEQUENCE serenity.mark_seq OWNER TO postgres;
+ALTER SEQUENCE serenity.mark_seq OWNER TO postgres;
 -- ddl-end --
 
 -- object: serenity.mark_type | type: TABLE --
@@ -1128,7 +1130,7 @@ CREATE TABLE serenity.mark_type (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.mark_type OWNER TO postgres;
+ALTER TABLE serenity.mark_type OWNER TO postgres;
 -- ddl-end --
 
 INSERT INTO serenity.mark_type (mark_type_id, mark_type_code) VALUES (E'1', E'YahooDailyClose');
@@ -1146,7 +1148,7 @@ CREATE TABLE serenity.instrument_mark (
 
 );
 -- ddl-end --
--- ALTER TABLE serenity.instrument_mark OWNER TO postgres;
+ALTER TABLE serenity.instrument_mark OWNER TO postgres;
 -- ddl-end --
 
 -- object: mark_type_fk | type: CONSTRAINT --
@@ -1254,6 +1256,113 @@ CREATE UNIQUE INDEX exchange_transfer_ref_idx ON serenity.exchange_transfer
 	);
 -- ddl-end --
 
+-- object: serenity.crypto_currency_pair_seq | type: SEQUENCE --
+-- DROP SEQUENCE IF EXISTS serenity.crypto_currency_pair_seq CASCADE;
+CREATE SEQUENCE serenity.crypto_currency_pair_seq
+	INCREMENT BY 1
+	MINVALUE 0
+	MAXVALUE 2147483647
+	START WITH 1
+	CACHE 1
+	NO CYCLE
+	OWNED BY NONE;
+-- ddl-end --
+ALTER SEQUENCE serenity.crypto_currency_pair_seq OWNER TO postgres;
+-- ddl-end --
+
+-- object: serenity.future_contract_seq | type: SEQUENCE --
+-- DROP SEQUENCE IF EXISTS serenity.future_contract_seq CASCADE;
+CREATE SEQUENCE serenity.future_contract_seq
+	INCREMENT BY 1
+	MINVALUE 0
+	MAXVALUE 2147483647
+	START WITH 1
+	CACHE 1
+	NO CYCLE
+	OWNED BY NONE;
+-- ddl-end --
+ALTER SEQUENCE serenity.future_contract_seq OWNER TO postgres;
+-- ddl-end --
+
+-- object: serenity.future_contract | type: TABLE --
+-- DROP TABLE IF EXISTS serenity.future_contract CASCADE;
+CREATE TABLE serenity.future_contract (
+	future_contract_id integer NOT NULL DEFAULT nextval('serenity.future_contract_seq'::regclass),
+	instrument_id integer NOT NULL,
+	underlier_instrument_id integer NOT NULL,
+	contract_size integer NOT NULL,
+	expiry timestamp,
+	CONSTRAINT future_contract_pk PRIMARY KEY (future_contract_id)
+
+);
+-- ddl-end --
+ALTER TABLE serenity.future_contract OWNER TO postgres;
+-- ddl-end --
+
+-- object: serenity.equity_seq | type: SEQUENCE --
+-- DROP SEQUENCE IF EXISTS serenity.equity_seq CASCADE;
+CREATE SEQUENCE serenity.equity_seq
+	INCREMENT BY 1
+	MINVALUE 0
+	MAXVALUE 2147483647
+	START WITH 1
+	CACHE 1
+	NO CYCLE
+	OWNED BY NONE;
+-- ddl-end --
+ALTER SEQUENCE serenity.equity_seq OWNER TO postgres;
+-- ddl-end --
+
+-- object: serenity.equity | type: TABLE --
+-- DROP TABLE IF EXISTS serenity.equity CASCADE;
+CREATE TABLE serenity.equity (
+	equity_id integer NOT NULL DEFAULT nextval('serenity.equity_seq'::regclass),
+	instrument_id integer NOT NULL,
+	primary_exchange_id integer NOT NULL,
+	CONSTRAINT equity_pk PRIMARY KEY (equity_id)
+
+);
+-- ddl-end --
+ALTER TABLE serenity.equity OWNER TO postgres;
+-- ddl-end --
+
+-- object: serenity.venue_type | type: TABLE --
+-- DROP TABLE IF EXISTS serenity.venue_type CASCADE;
+CREATE TABLE serenity.venue_type (
+	venue_type_id smallint NOT NULL,
+	venue_type_code varchar(32),
+	CONSTRAINT venue_type_pk PRIMARY KEY (venue_type_id),
+	CONSTRAINT venue_type_code_index UNIQUE (venue_type_code)
+
+);
+-- ddl-end --
+ALTER TABLE serenity.venue_type OWNER TO postgres;
+-- ddl-end --
+
+INSERT INTO serenity.venue_type (venue_type_id, venue_type_code) VALUES (E'1', E'CryptoExchange');
+-- ddl-end --
+INSERT INTO serenity.venue_type (venue_type_id, venue_type_code) VALUES (E'2', E'EquityExchange');
+-- ddl-end --
+INSERT INTO serenity.venue_type (venue_type_id, venue_type_code) VALUES (E'3', E'DataAggregator');
+-- ddl-end --
+
+-- object: exchange_code_venue_type_idx | type: INDEX --
+-- DROP INDEX IF EXISTS serenity.exchange_code_venue_type_idx CASCADE;
+CREATE UNIQUE INDEX exchange_code_venue_type_idx ON serenity.exchange
+	USING btree
+	(
+	  exchange_code,
+	  venue_type_id
+	);
+-- ddl-end --
+
+-- object: venue_type_fk | type: CONSTRAINT --
+-- ALTER TABLE serenity.exchange DROP CONSTRAINT IF EXISTS venue_type_fk CASCADE;
+ALTER TABLE serenity.exchange ADD CONSTRAINT venue_type_fk FOREIGN KEY (venue_type_id)
+REFERENCES serenity.venue_type (venue_type_id) MATCH FULL
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
 -- object: parent_order_fk | type: CONSTRAINT --
 -- ALTER TABLE serenity."order" DROP CONSTRAINT IF EXISTS parent_order_fk CASCADE;
 ALTER TABLE serenity."order" ADD CONSTRAINT parent_order_fk FOREIGN KEY (parent_order_id)
@@ -1273,6 +1382,34 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE serenity.currency_pair ADD CONSTRAINT quote_currency_fk FOREIGN KEY (quote_currency_id)
 REFERENCES serenity.currency (currency_id) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: instrument_fk | type: CONSTRAINT --
+-- ALTER TABLE serenity.future_contract DROP CONSTRAINT IF EXISTS instrument_fk CASCADE;
+ALTER TABLE serenity.future_contract ADD CONSTRAINT instrument_fk FOREIGN KEY (instrument_id)
+REFERENCES serenity.instrument (instrument_id) MATCH FULL
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
+-- object: underier_instrument_fk | type: CONSTRAINT --
+-- ALTER TABLE serenity.future_contract DROP CONSTRAINT IF EXISTS underier_instrument_fk CASCADE;
+ALTER TABLE serenity.future_contract ADD CONSTRAINT underier_instrument_fk FOREIGN KEY (underlier_instrument_id)
+REFERENCES serenity.instrument (instrument_id) MATCH FULL
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
+-- object: instrument_fk | type: CONSTRAINT --
+-- ALTER TABLE serenity.equity DROP CONSTRAINT IF EXISTS instrument_fk CASCADE;
+ALTER TABLE serenity.equity ADD CONSTRAINT instrument_fk FOREIGN KEY (instrument_id)
+REFERENCES serenity.instrument (instrument_id) MATCH FULL
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
+-- object: primary_exchange_fk | type: CONSTRAINT --
+-- ALTER TABLE serenity.equity DROP CONSTRAINT IF EXISTS primary_exchange_fk CASCADE;
+ALTER TABLE serenity.equity ADD CONSTRAINT primary_exchange_fk FOREIGN KEY (primary_exchange_id)
+REFERENCES serenity.exchange (exchange_id) MATCH FULL
+ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ddl-end --
 
 

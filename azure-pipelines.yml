@@ -27,6 +27,11 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
+    python -m pip install flake8
+    flake8 src strategies
+  displayName: 'Run flake8 lint tests'
+
+- script: |
     pip install pytest pytest-azurepipelines pytest-cov pytest-mock
     PYTHONPATH=src/ pytest tests/ --cov src/ --cov-report html
   displayName: 'Test and report coverage with pytest'

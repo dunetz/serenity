@@ -1,0 +1,95 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluentd-es-config
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+data:
+  fluent.conf: |
+    @include system.conf
+    @include forward.input.conf
+    @include monitoring.conf
+
+  system.conf: |-
+    <system>
+      root_dir /tmp/fluentd-buffers/
+    </system>
+
+  forward.input.conf: |-
+    # Takes the messages sent over TCP
+    <source>
+      @type forward
+      bind 0.0.0.0
+      port 24224
+    </source>
+    <match **>
+      @type copy
+
+      <store>
+        @type elasticsearch_dynamic
+        @log_level info
+        include_tag_key true
+        host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+        port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+        user "#{ENV['FLUENT_ELASTICSEARCH_USER']}"
+        password "#{ENV['FLUENT_ELASTICSEARCH_PASSWORD']}"
+        scheme "#{ENV['FLUENT_ELASTICSEARCH_SCHEME'] || 'http'}"
+        ssl_verify "#{ENV['FLUENT_ELASTICSEARCH_SSL_VERIFY'] || 'true'}"
+        reload_connections true
+        logstash_format true
+        logstash_prefix fluentd
+        suppress_type_name true
+        <buffer>
+          flush_mode            interval
+          flush_interval        1s
+          retry_type            exponential_backoff
+          flush_thread_count    2
+          retry_forever         true
+          retry_max_interval    30
+          chunk_limit_size      10M
+          queue_limit_length    8
+          overflow_action       block
+        </buffer>
+      </store>
+    </match>
+
+  monitoring.conf: |-
+    # Prometheus Exporter Plugin
+    # input plugin that exports metrics
+    <source>
+      @id prometheus
+      @type prometheus
+    </source>
+
+    <source>
+      @id monitor_agent
+      @type monitor_agent
+    </source>
+
+    # input plugin that collects metrics from MonitorAgent
+    <source>
+      @id prometheus_monitor
+      @type prometheus_monitor
+      <labels>
+        host ${hostname}
+      </labels>
+    </source>
+
+    # input plugin that collects metrics for output plugin
+    <source>
+      @id prometheus_output_monitor
+      @type prometheus_output_monitor
+      <labels>
+        host ${hostname}
+      </labels>
+    </source>
+
+    # input plugin that collects metrics for in_tail plugin
+    <source>
+      @id prometheus_tail_monitor
+      @type prometheus_tail_monitor
+      <labels>
+        host ${hostname}
+      </labels>
+    </source>

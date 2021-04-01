@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phemex-fh-btcusd
+  labels:
+    app: phemex-fh-btcusd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phemex-fh-btcusd
+  template:
+    metadata:
+      labels:
+        app: phemex-fh-btcusd
+    spec:
+      containers:
+        - name: phemex-fh-btcusd
+          image: cloudwallcapital/serenity:2021.03.07-b80
+          command: ["/app/venv-py3/bin/python"]
+          args: ["serenity/marketdata/fh/phemex_fh.py", "--include_symbol=BTCUSD"]
+          env:
+            - name: POSTGRES_SERENITY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret-config
+                  key: serenity-password
+          volumeMounts:
+            - mountPath: /behemoth
+              name: behemoth 
+      volumes:
+        - name: behemoth
+          persistentVolumeClaim:
+            claimName: behemoth-pv-claim

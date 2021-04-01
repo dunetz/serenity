@@ -6,15 +6,17 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import List
 
+# noinspection PyProtectedMember
+from prometheus_client import start_http_server, Counter
 from tau.core import Signal, MutableSignal, NetworkScheduler, Event, Network, RealtimeNetworkScheduler
 from tau.event import Do
 from tau.signal import Function
 
-from serenity.db import TypeCodeCache, InstrumentCache, connect_serenity_db
-from serenity.marketdata import MarketdataService, OrderBook, OrderBookSnapshot
+from serenity.db.api import TypeCodeCache, InstrumentCache, connect_serenity_db
+from serenity.marketdata.api import MarketdataService, OrderBook, OrderBookSnapshot
 from serenity.model.exchange import ExchangeInstrument
-from serenity.tickstore.journal import Journal
-from serenity.trading import Side
+from serenity.marketdata.tickstore.journal import Journal
+from serenity.trading.api import Side
 from serenity.utils import init_logging, custom_asyncio_error_handler
 
 
@@ -268,10 +270,11 @@ class FeedHandlerMarketdataService(MarketdataService):
             self.notified_instruments.add(instrument)
             self.scheduler.schedule_update(self.subscribed_instruments, instrument)
         symbol = instrument.get_exchange_instrument_code()
-        return f'{instrument.get_exchange().get_type_code().lower()}:{self.instance_id}:{symbol}'
+        return f'{instrument.get_exchange().get_exchange_code().lower()}:{self.instance_id}:{symbol}'
 
 
-def ws_fh_main(create_fh, uri_scheme: str, instance_id: str, journal_path: str, db: str, journal_books: bool = True):
+def ws_fh_main(create_fh, uri_scheme: str, instance_id: str, journal_path: str, db: str, journal_books: bool = True,
+               include_symbol: str = '*'):
     init_logging()
     logger = logging.getLogger(__name__)
 
@@ -283,11 +286,17 @@ def ws_fh_main(create_fh, uri_scheme: str, instance_id: str, journal_path: str, 
 
     scheduler = RealtimeNetworkScheduler()
     registry = FeedHandlerRegistry()
-    fh = create_fh(scheduler, instr_cache, instance_id)
+    fh = create_fh(scheduler, instr_cache, include_symbol, instance_id)
     registry.register(fh)
+
+    # register Prometheus metrics
+    trade_counter = Counter('serenity_trade_counter', 'Number of trade prints received by feedhandler')
+    book_update_counter = Counter('serenity_book_update_counter', 'Number of book updates received by feedhandler')
 
     for instrument in fh.get_instruments():
         symbol = instrument.get_exchange_instrument_code()
+        if not (symbol == include_symbol or include_symbol == '*'):
+            continue
 
         # subscribe to FeedState in advance so we know when the Feed is ready to subscribe trades
         class SubscribeTrades(Event):
@@ -307,6 +316,7 @@ def ws_fh_main(create_fh, uri_scheme: str, instance_id: str, journal_path: str, 
                 return False
 
             def on_trade_print(self, trade):
+                trade_counter.inc()
                 logger.info(trade)
 
                 self.appender.write_double(datetime.utcnow().timestamp())
@@ -335,24 +345,28 @@ def ws_fh_main(create_fh, uri_scheme: str, instance_id: str, journal_path: str, 
                     return False
 
                 def on_book_update(self, book: OrderBook):
+                    book_update_counter.inc()
                     self.appender.write_double(datetime.utcnow().timestamp())
                     if len(book.get_bids()) > 0:
-                        self.appender.write_long(book.get_best_bid().get_qty())
+                        self.appender.write_double(book.get_best_bid().get_qty())
                         self.appender.write_double(book.get_best_bid().get_px())
                     else:
-                        self.appender.write_long(0)
+                        self.appender.write_double(0)
                         self.appender.write_double(0)
 
                     if len(book.get_asks()) > 0:
-                        self.appender.write_long(book.get_best_ask().get_qty())
+                        self.appender.write_double(book.get_best_ask().get_qty())
                         self.appender.write_double(book.get_best_ask().get_px())
                     else:
-                        self.appender.write_long(0)
+                        self.appender.write_double(0)
                         self.appender.write_double(0)
 
             scheduler.get_network().connect(fh.get_state(), SubscribeOrderBook(symbol))
 
         scheduler.get_network().connect(fh.get_state(), SubscribeTrades(symbol))
+
+    # launch the monitoring endpoint
+    start_http_server(8000)
 
     # async start the feedhandler
     asyncio.ensure_future(fh.start())

@@ -3,7 +3,6 @@
 
 BUILD_NUMBER_FILE=build-number.txt
 
-# Regular Makefile part for buildpypi itself
 help:
 	@echo ''
 	@echo 'Usage: make [TARGET] [EXTRA_ARGUMENTS]'

@@ -7,18 +7,25 @@ import websockets
 from tau.core import MutableSignal, NetworkScheduler, Event
 from tau.signal import Map, Filter
 
-from serenity.db import InstrumentCache
-from serenity.marketdata.fh.feedhandler import FeedHandlerState, WebsocketFeedHandler, ws_fh_main, Feed
-from serenity.marketdata import Trade
+from serenity.db.api import InstrumentCache
+from serenity.marketdata.fh.feedhandler import FeedHandlerState, WebsocketFeedHandler, ws_fh_main, Feed, \
+    OrderBookBuilder
+from serenity.marketdata.api import Trade, OrderBookEvent, BookLevel, OrderBookSnapshot, OrderBookUpdate
 from serenity.model.exchange import ExchangeInstrument
-from serenity.trading import Side
+from serenity.trading.api import Side
 
 
 class CoinbaseProFeedHandler(WebsocketFeedHandler):
+    """
+    Market data feedhandler for the Coinbase Pro exchange. Supports both trade print and top of order book feeds.
+
+    :see: https://docs.pro.coinbase.com/
+    """
 
     logger = logging.getLogger(__name__)
 
-    def __init__(self, scheduler: NetworkScheduler, instrument_cache: InstrumentCache, instance_id: str = 'prod'):
+    def __init__(self, scheduler: NetworkScheduler, instrument_cache: InstrumentCache, include_symbol: str = '*',
+                 instance_id: str = 'prod'):
         if instance_id == 'prod':
             self.ws_uri = 'wss://ws-feed.pro.coinbase.com'
             self.cbp_client = coinbasepro.PublicClient()
@@ -28,11 +35,13 @@ class CoinbaseProFeedHandler(WebsocketFeedHandler):
         else:
             raise ValueError(f'Unknown instance_id: {instance_id}')
 
-        # ensure we've initialized PhemexConnection before loading instruments in super()
+        # ensure we've initialized client before loading instruments in super()
         super().__init__(scheduler, instrument_cache, instance_id)
 
+        self.include_symbol = include_symbol
+
         self.instrument_trades = {}
-        self.instrument_quotes = {}
+        self.instrument_order_book_events = {}
         self.instrument_order_books = {}
 
     @staticmethod
@@ -46,9 +55,10 @@ class CoinbaseProFeedHandler(WebsocketFeedHandler):
             symbol = product['id']
             base_ccy = product['base_currency']
             quote_ccy = product['quote_currency']
-            currency_pair = self.instrument_cache.get_or_create_currency_pair(base_ccy, quote_ccy)
+            currency_pair = self.instrument_cache.get_or_create_cryptocurrency_pair(base_ccy, quote_ccy)
             instrument = currency_pair.get_instrument()
-            exch_instr = self.instrument_cache.get_or_create_exchange_instrument(symbol, instrument, "CoinbasePro")
+            exchange = self.instrument_cache.get_crypto_exchange('COINBASEPRO')
+            exch_instr = self.instrument_cache.get_or_create_exchange_instrument(symbol, instrument, exchange)
 
             self.logger.info(f'\t{symbol} - {base_ccy}/{quote_ccy} [ID #{instrument.get_instrument_id()}]')
             self.known_instrument_ids[symbol] = exch_instr
@@ -56,7 +66,7 @@ class CoinbaseProFeedHandler(WebsocketFeedHandler):
 
     def _create_feed(self, instrument: ExchangeInstrument):
         symbol = instrument.get_exchange_instrument_code()
-        return Feed(instrument, self.instrument_trades[symbol], self.instrument_quotes[symbol],
+        return Feed(instrument, self.instrument_trades[symbol], self.instrument_order_book_events[symbol],
                     self.instrument_order_books[symbol])
 
     # noinspection DuplicatedCode
@@ -66,29 +76,33 @@ class CoinbaseProFeedHandler(WebsocketFeedHandler):
         symbols = []
         for instrument in self.get_instruments():
             symbol = instrument.get_exchange_instrument_code()
-            symbols.append(f'{symbol}')
+            if symbol == self.include_symbol or self.include_symbol == '*':
+                symbols.append(f'{symbol}')
 
-            self.instrument_trades[symbol] = MutableSignal()
-            self.instrument_quotes[symbol] = MutableSignal()
-            self.instrument_order_books[symbol] = MutableSignal()
+                self.instrument_trades[symbol] = MutableSignal()
+                self.instrument_order_book_events[symbol] = MutableSignal()
+                self.instrument_order_books[symbol] = OrderBookBuilder(network,
+                                                                       self.instrument_order_book_events[symbol])
 
-            # magic: inject the bare Signal into the graph so we can
-            # fire events on it without any downstream connections
-            # yet made
-            network.attach(self.instrument_trades[symbol])
-            network.attach(self.instrument_quotes[symbol])
-            network.attach(self.instrument_order_books[symbol])
+                # magic: inject the bare Signal into the graph so we can
+                # fire events on it without any downstream connections
+                # yet made
+                network.attach(self.instrument_trades[symbol])
+                network.attach(self.instrument_order_book_events[symbol])
+                network.attach(self.instrument_order_books[symbol])
 
         subscribe_msg = {
             'type': 'subscribe',
             'product_ids': symbols,
-            'channels': ['matches', 'heartbeat']
+            'channels': ['matches', 'level2', 'heartbeat']
         }
 
         messages = MutableSignal()
         json_messages = Map(network, messages, lambda x: json.loads(x))
         match_messages = Filter(network, json_messages, lambda x: x.get('type', None) == 'match')
+        book_messages = Filter(network, json_messages, lambda x: x.get('type', None) in {'snapshot', 'l2update'})
         trades = Map(network, match_messages, lambda x: self.__extract_trade(x))
+        books = Map(network, book_messages, lambda x: self.__extract_order_book_event(x))
 
         class TradeScheduler(Event):
             def __init__(self, fh: CoinbaseProFeedHandler):
@@ -105,6 +119,22 @@ class CoinbaseProFeedHandler(WebsocketFeedHandler):
                     return False
 
         network.connect(trades, TradeScheduler(self))
+
+        class OrderBookScheduler(Event):
+            def __init__(self, fh: CoinbaseProFeedHandler):
+                self.fh = fh
+
+            def on_activate(self) -> bool:
+                if books.is_valid():
+                    obe = books.get_value()
+                    obe_symbol = obe.get_instrument().get_exchange_instrument_code()
+                    obe_signal = self.fh.instrument_order_book_events[obe_symbol]
+                    self.fh.scheduler.schedule_update(obe_signal, obe)
+                    return True
+                else:
+                    return False
+
+        network.connect(books, OrderBookScheduler(self))
 
         async with websockets.connect(self.ws_uri) as sock:
             self.logger.info('Sending subscription request for all products')
@@ -124,13 +154,53 @@ class CoinbaseProFeedHandler(WebsocketFeedHandler):
         instrument = self.known_instrument_ids[symbol]
         return Trade(instrument, sequence, trade_id, side, qty, price)
 
+    def __extract_order_book_event(self, msg) -> OrderBookEvent:
+        symbol = msg['product_id']
+        msg_type = msg['type']
 
-def create_fh(scheduler: NetworkScheduler, instrument_cache: InstrumentCache, instance_id):
-    return CoinbaseProFeedHandler(scheduler, instrument_cache, instance_id)
+        instrument = self.known_instrument_ids[symbol]
+
+        def to_book_level_list(px_qty_list):
+            book_levels = []
+            for px_qty in px_qty_list:
+                px = float(px_qty[0])
+                qty = float(px_qty[1])
+                book_levels.append(BookLevel(px, qty))
+            return book_levels
+
+        if msg_type == 'snapshot':
+            self.logger.info('received initial L2 order book snapshot')
+            bids = to_book_level_list(msg['bids'])
+            asks = to_book_level_list(msg['asks'])
+            return OrderBookSnapshot(instrument, bids, asks, 0)
+        else:
+            changes = msg['changes']
+            bids = []
+            asks = []
+            for side_px_qty in changes:
+                side = side_px_qty[0]
+                px = float(side_px_qty[1])
+                qty = float(side_px_qty[2])
+                if side == 'buy':
+                    bids.append(BookLevel(px, qty))
+                else:
+                    asks.append(BookLevel(px, qty))
+            return OrderBookUpdate(instrument, bids, asks, 0)
 
 
-def main(instance_id: str = 'prod', journal_path: str = '/behemoth/journals/'):
-    ws_fh_main(create_fh, CoinbaseProFeedHandler.get_uri_scheme(), instance_id, journal_path, 'COINBASE_PRO_TRADES')
+def create_fh(scheduler: NetworkScheduler, instrument_cache: InstrumentCache, include_symbol: str, instance_id: str):
+    """
+    Helper function that instantiates a CBP feedhandler; used in the main method
+    """
+    return CoinbaseProFeedHandler(scheduler, instrument_cache, include_symbol, instance_id)
+
+
+def main(instance_id: str = 'prod', journal_path: str = '/behemoth/journals/', include_symbol: str = '*'):
+    """
+    Command-line entry point used by Fire runner for CBP feedhandler.
+    """
+    ws_fh_main(create_fh, CoinbaseProFeedHandler.get_uri_scheme(), instance_id, journal_path, 'COINBASE_PRO',
+               include_symbol=include_symbol)
 
 
 if __name__ == '__main__':

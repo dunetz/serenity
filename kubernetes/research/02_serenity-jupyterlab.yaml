@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serenity-jupyterlab
+  labels:
+    app: serenity-jupyterlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serenity-jupyterlab
+  template:
+    metadata:
+      labels:
+        app: serenity-jupyterlab
+    spec:
+      containers:
+        - name: serenity-jupyterlab
+          image: cloudwallcapital/serenity-jupyterlab:2020.10.31-b35
+          ports:
+            - containerPort: 8888
+          volumeMounts:
+            - mountPath: /behemoth
+              name: behemoth-volume
+          env:
+            - name: POSTGRES_SERENITY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret-config
+                  key: serenity-password
+            - name: POSTGRES_SHARADAR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret-config
+                  key: sharadar-password
+            - name: AZURE_CONNECT_STR
+              valueFrom:
+                secretKeyRef:
+                  name: azure-secret-config
+                  key: connect-str
+      volumes:
+        - name: behemoth-volume
+          persistentVolumeClaim:
+            claimName: serenity-jupyterlab-pv-claim

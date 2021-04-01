@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List
 
-from serenity.model import TypeCode
+from serenity.model.api import TypeCode
 from serenity.model.account import TradingAccount
 from serenity.model.instrument import Instrument
 

@@ -1,0 +1,38 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: sharadar-daily
+spec:
+  schedule: "@midnight"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: sharadar-daily
+            image: cloudwallcapital/serenity:2020.12.20-b76
+            command: ["/app/venv-py3/bin/python"]
+            args: ["serenity/data/batch/sharadar_main.py", "--mode", "DAILY"]
+            env:
+            - name: POSTGRES_SHARADAR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret-config
+                  key: sharadar-password
+            - name: QUANDL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: quandl-secret-config
+                  key: api-key
+            - name: LUIGI_DATA_DIR
+              value: /luigi
+            - name: SMTP_HOSTNAME
+              value: serenity-postfix
+            volumeMounts:
+            - mountPath: /luigi
+              name: luigi
+          restartPolicy: OnFailure
+          volumes:
+            - name: luigi
+              persistentVolumeClaim:
+                claimName: luigi-pv-claim

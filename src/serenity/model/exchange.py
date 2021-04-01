@@ -1,14 +1,43 @@
 from datetime import datetime
 from decimal import Decimal
 
-from serenity.model import TypeCode
+from serenity.model.api import TypeCode
 from serenity.model.instrument import Instrument, Currency
 from serenity.model.order import OrderType, TimeInForce, Side, Destination, DestinationType
 
 
-class Exchange(TypeCode):
+class VenueType(TypeCode):
     def __init__(self, type_id: int, type_code: str):
         super().__init__(type_id, type_code)
+
+
+class Exchange:
+    def __init__(self, exchange_id: int, venue_type: VenueType, exchange_code: str, exchange_name: str,
+                 exchange_calendar: str = None, exchange_tz: str = None):
+        self.exchange_id = exchange_id
+        self.venue_type = venue_type
+        self.exchange_code = exchange_code
+        self.exchange_name = exchange_name
+        self.exchange_calendar = exchange_calendar
+        self.exchange_tz = exchange_tz
+
+    def get_exchange_id(self) -> int:
+        return self.exchange_id
+
+    def get_venue_type(self) -> VenueType:
+        return self.venue_type
+
+    def get_exchange_code(self) -> str:
+        return self.exchange_code
+
+    def get_exchange_name(self) -> str:
+        return self.exchange_name
+
+    def get_exchange_calendar(self) -> str:
+        return self.exchange_calendar
+
+    def get_exchange_tz(self) -> str:
+        return self.exchange_tz
 
 
 class ExchangeInstrument:
@@ -34,7 +63,7 @@ class ExchangeInstrument:
         return self.exchange_instrument_code
 
     def __str__(self):
-        return f'{self.exchange}[{self.exchange_instrument_code}]'
+        return f'{self.exchange.get_exchange_code()}:{self.exchange_instrument_code}'
 
 
 class ExchangeAccount:

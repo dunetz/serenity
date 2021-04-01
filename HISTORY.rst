@@ -3,6 +3,33 @@
 Release History
 ---------------
 
+0.9.0 (TBD January 2021)
+++++++++++++++++++++++++
+
+- Secured AzureBlobTickstore by switching to Azure AD credentials for read-only
+- Integrated documentation with http://readthedocs.org
+- Improved API docstrings
+
+0.8.0 (2021-01-01)
+++++++++++++++++++
+
+- Extensive support for Sharadar equity fundamentals research database
+- Brand new InvestmentStrategy API and backtester for stock trading
+- Upgraded to latest Tau reactive library (0.14)
+
+0.7.0 (2020-10-31)
+++++++++++++++++++
+
+- Support for distributed backtests with Dask
+
+0.6.0 (2020-10-03)
+++++++++++++++++++
+
+- Major upgrade to Tau reactive framework to address threading issues
+- refactored modules to use api.py rather than __init__.py
+- Fixed bug in extra outputs handling in live & backtest modes
+- Further strategy improvements
+
 0.5.1 (2020-09-28)
 ++++++++++++++++++
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from serenity.model import TypeCode
+from serenity.model.api import TypeCode
 from serenity.model.instrument import Instrument
 
 
